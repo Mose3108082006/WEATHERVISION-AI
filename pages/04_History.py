@@ -2,42 +2,50 @@ import streamlit as st
 import json
 import os
 
-# Pastikan set_page_config ada di setiap file pages
-st.set_page_config(page_title="WEATHERVISION-AI", layout="wide")
+# Konfigurasi Halaman
+st.set_page_config(
+    page_title="WeatherVision-AI", 
+    layout="wide", 
+    initial_sidebar_state="expanded"
+)
 
-st.markdown("""
-    <style>
-    [data-testid="stSidebar"] { background-color: #A0522D; }
-    [data-testid="stSidebar"] a, [data-testid="stSidebar"] span { color: #FFFFFF !important; }
-    </style>
-""", unsafe_allow_html=True)
-
+# CSS Profesional
 st.markdown("""
 <style>
+    /* Sidebar */
+    [data-testid="stSidebar"] { background-color: #A0522D !important; }
+    [data-testid="stSidebar"] * { color: #FFFFFF !important; }
+    
+    /* Global */
     .stApp { background-color: #fdba74 !important; }
-    #MainMenu, header { visibility: hidden; }
-
+    #MainMenu, footer { visibility: hidden; }
+    
+    /* Header Banner */
     .header-banner {
-        background-color: #9a3412 !important; 
+        background-color: #9a3412 !important;
         border-radius: 12px;
-        border: 4px solid #7c2d12 !important; 
+        border: 4px solid #7c2d12 !important;
         padding: 25px;
         text-align: center;
         margin-bottom: 25px;
-        width: 100%;
     }
-    .header-banner h1 { color: #ffffff !important; font-weight: 800 !important; margin: 0; font-size: 2.5em; }
-    .header-banner h2 { color: #ffffff !important; font-weight: 500 !important; margin: 5px 0 0 0; font-size: 1.5em; opacity: 0.9; }
-    
+    /* Mengubah semua teks di header menjadi putih */
+    .header-banner h1, .header-banner h2, .header-banner p { 
+        color: #ffffff !important; 
+    }
+
+    /* Kotak Putih untuk Kartu Riwayat */
     .metric-card {
-        background-color: #ffffff;
+        background-color: #ffffff !important;
         padding: 20px;
         border-radius: 15px;
-        border: 3px solid #c2410c !important;
-        margin: 10px;
+        border: 2px solid #c2410c !important;
+        margin-bottom: 15px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
 </style>
 """, unsafe_allow_html=True)
+
 
 # --- UI HEADER ---
 st.markdown("""
@@ -51,7 +59,7 @@ st.markdown("""
 file_path = "storage/history.json"
 
 if not os.path.exists(file_path):
-    st.warning("Belum ada data riwayat pemindaian.")
+    st.warning("Data riwayat tidak ditemukan.")
 else:
     with open(file_path, "r") as f:
         lines = f.readlines()
@@ -61,14 +69,13 @@ else:
     else:
         history_data = [json.loads(line) for line in reversed(lines)]
         
-        # Menampilkan 2 kolom per baris
+        # Menampilkan data dalam 2 kolom
         for i in range(0, len(history_data), 2):
             cols = st.columns(2)
             
-            # Helper untuk merender kartu agar kode rapi
             def render_card(data):
                 weather = data.get('weather', 'N/A').lower()
-                icon = "☀️" if "cerah" in weather else "☁️"
+                icon = "☀️" if "cerah" in weather else ("☁️" if "kabut" in weather else "🌧️")
                 return f"""
                 <div class='metric-card'>
                     <div style='display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 15px;'>
@@ -78,7 +85,7 @@ else:
                     <div style='border-top: 1px solid #e5e7eb; padding-top: 10px;'>
                         <div style='display: flex; justify-content: space-between; margin: 5px 0;'>
                             <span style='color: #6b7280;'>🌡️ Suhu Udara</span>
-                            <span style='font-weight: 700;'>{data.get('temperature', '0')} °C</span>
+                            <span style='font-weight: 700; color: #333;'>{data.get('temperature', '0')} °C</span>
                         </div>
                         <div style='display: flex; justify-content: space-between; margin: 5px 0;'>
                             <span style='color: #6b7280;'>🎯 Tingkat Keyakinan</span>
@@ -94,7 +101,3 @@ else:
             if i + 1 < len(history_data):
                 with cols[1]:
                     st.markdown(render_card(history_data[i+1]), unsafe_allow_html=True)
-
-# --- TOMBOL NAVIGASI ---
-if st.button("⬅️ Kembali ke Home"):
-    st.switch_page("app.py")
