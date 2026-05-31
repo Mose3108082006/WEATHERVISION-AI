@@ -3,3 +3,4 @@ pandas
 openpyxl
 opencv-python
 requests
+roboflow==1.1.49
