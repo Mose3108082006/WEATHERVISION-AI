@@ -5,7 +5,10 @@ API_KEY = "Ld8FDyojU2B4NsmFZyjr"
 
 rf = Roboflow(api_key=API_KEY)
 
+# Model validator
 validator_model = rf.workspace().project("there").version(1).model
+
+# Model prediksi cuaca
 weather_model = rf.workspace().project("prediksi_cuaca").version(1).model
 
 
@@ -17,9 +20,6 @@ def save_temp(image):
 
 
 def safe_get_label(pred):
-    """
-    AMAN: ambil label walau struktur Roboflow beda-beda
-    """
     return (
         pred.get("class")
         or pred.get("prediction")
@@ -34,25 +34,44 @@ def predict_weather(image):
         image_path = save_temp(image)
 
         # =========================
-        # VALIDATOR
+        # VALIDATOR MODEL
         # =========================
         validator_result = validator_model.predict(image_path).json()
+
+        print("\n===== VALIDATOR RESULT =====")
+        print(validator_result)
+
         validator_preds = validator_result.get("predictions", [])
 
         if not validator_preds:
-            return {"valid": False, "reason": "no_detection", "weather": None, "confidence": 0}
+            return {
+                "valid": False,
+                "reason": "no_detection",
+                "weather": None,
+                "confidence": 0
+            }
 
-        best = validator_preds[0]
+        # Ambil prediksi dengan confidence tertinggi
+        best_validator = max(
+            validator_preds,
+            key=lambda x: x.get("confidence", 0)
+        )
 
-        label = safe_get_label(best).lower().strip()
-        confidence = round(best.get("confidence", 0) * 100, 2)
+        label = safe_get_label(best_validator).lower().strip()
+        confidence = round(
+            best_validator.get("confidence", 0) * 100,
+            2
+        )
 
-        print("VALIDATOR:", label, confidence)
+        print(f"VALIDATOR LABEL: {label}")
+        print(f"VALIDATOR CONFIDENCE: {confidence}%")
 
         # =========================
-        # FILTER
+        # CEK KATEGORI
         # =========================
-        if "bukan" in label:
+
+        # Jika bukan kategori -> tolak
+        if label == "bukan kategori":
             return {
                 "valid": False,
                 "reason": "not_category",
@@ -60,28 +79,54 @@ def predict_weather(image):
                 "confidence": confidence
             }
 
+        # Jika label tidak dikenal -> tolak
+        if label != "kategori":
+            return {
+                "valid": False,
+                "reason": "unknown_class",
+                "weather": None,
+                "confidence": confidence
+            }
+
         # =========================
-        # WEATHER MODEL
+        # PREDIKSI CUACA
         # =========================
         weather_result = weather_model.predict(image_path).json()
+
+        print("\n===== WEATHER RESULT =====")
+        print(weather_result)
+
         weather_preds = weather_result.get("predictions", [])
 
         if not weather_preds:
-            return {"valid": False, "reason": "no_weather", "weather": None, "confidence": 0}
+            return {
+                "valid": False,
+                "reason": "no_weather_prediction",
+                "weather": None,
+                "confidence": 0
+            }
 
-        best_weather = weather_preds[0]
+        best_weather = max(
+            weather_preds,
+            key=lambda x: x.get("confidence", 0)
+        )
 
         weather_label = safe_get_label(best_weather)
+        weather_confidence = round(
+            best_weather.get("confidence", 0) * 100,
+            2
+        )
 
         return {
             "valid": True,
             "reason": "success",
             "weather": weather_label,
-            "confidence": round(best_weather.get("confidence", 0) * 100, 2)
+            "confidence": weather_confidence
         }
 
     except Exception as e:
-        print("❌ FULL ERROR:", str(e))
+
+        print("❌ ERROR:", str(e))
 
         return {
             "valid": False,
