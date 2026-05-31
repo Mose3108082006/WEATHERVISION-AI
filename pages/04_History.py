@@ -134,7 +134,7 @@ div[data-testid="stColumn"]{
 # ==========================================
 st.markdown("""
 <div class="header-banner">
-    <h1>📜WEATHERVISION-AI</h1>
+    <h1>WEATHERVISION-AI</h1>
     <p>History Scan Cuaca</p>
 </div>
 """, unsafe_allow_html=True)
