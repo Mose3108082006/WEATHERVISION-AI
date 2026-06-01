@@ -1,12 +1,12 @@
 from roboflow import Roboflow
 import tempfile
 
-API_KEY = "Ld8FDyojU2B4NsmFZyjr"
+API_KEY = "Due583nQjuqECgFBsQvn"
 
 rf = Roboflow(api_key=API_KEY)
 
 # Model validator
-validator_model = rf.workspace().project("there").version(1).model
+validator_model = rf.workspace().project("validasi-kategori-bukan-kategori").version(1).model
 
 # Model prediksi cuaca
 weather_model = rf.workspace().project("prediksi_cuaca").version(1).model
